@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Minimal Accordion</title>
+<style>
+  /* ---------- Accordion CSS ---------- */
+  .accordion { max-width: 640px; margin: 2rem auto; font-family: system-ui, sans-serif; }
+  .accordion-item { border-bottom: 1px solid #ddd; }
+  .accordion-header {
+    width: 100%; padding: 1rem 0; display: flex; justify-content: space-between; align-items: center;
+    background: none; border: 0; font: inherit; font-weight: 600; text-align: left; cursor: pointer;
+  }
+  .accordion-header::after { content: "+"; font-size: 1.25rem; transition: transform .25s; }
+  .accordion-item.is-open .accordion-header::after { transform: rotate(45deg); }
+  .accordion-header:focus-visible { outline: 2px solid #2563eb; outline-offset: 2px; }
+
+  /* Smooth height via grid trick: no JS height calculation needed */
+  .accordion-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .3s ease; }
+  .accordion-item.is-open .accordion-panel { grid-template-rows: 1fr; }
+  .accordion-content { overflow: hidden; }
+  .accordion-content p { margin: 0 0 1rem; line-height: 1.6; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .accordion-panel, .accordion-header::after { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ---------- Accordion HTML ---------- -->
+<div class="accordion" data-single="true"> <!-- data-single="false" lets multiple items stay open -->
+  <div class="accordion-item is-open">
+    <button class="accordion-header" aria-expanded="true">What is this?</button>
+    <div class="accordion-panel"><div class="accordion-content"><p>A lightweight accordion with no dependencies.</p></div></div>
+  </div>
+  <div class="accordion-item">
+    <button class="accordion-header" aria-expanded="false">How does it animate?</button>
+    <div class="accordion-panel"><div class="accordion-content"><p>It transitions grid-template-rows from 0fr to 1fr, so it works with any content height.</p></div></div>
+  </div>
+  <div class="accordion-item">
+    <button class="accordion-header" aria-expanded="false">Can I use it in WordPress?</button>
+    <div class="accordion-panel"><div class="accordion-content"><p>Yes. Paste the markup into a Custom HTML block or a shortcode, and enqueue the CSS and JS.</p></div></div>
+  </div>
+</div>
+
+<!-- ---------- Accordion JS (vanilla, event delegation) ---------- -->
+<script>
+document.addEventListener('click', function (e) {
+  var btn = e.target.closest('.accordion-header');
+  if (!btn) return;
+
+  var item = btn.parentElement;
+  var accordion = item.closest('.accordion');
+  var willOpen = !item.classList.contains('is-open');
+
+  if (accordion.dataset.single === 'true') {
+    accordion.querySelectorAll('.accordion-item.is-open').forEach(function (el) {
+      el.classList.remove('is-open');
+      el.querySelector('.accordion-header').setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  item.classList.toggle('is-open', willOpen);
+  btn.setAttribute('aria-expanded', willOpen);
+});
+</script>
+</body>
+</html>

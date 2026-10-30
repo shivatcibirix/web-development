@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessible Accordion</title>
+<meta name="description" content="WCAG 2.2 compliant accordion following the WAI-ARIA Authoring Practices pattern.">
+
+<!-- Progressive enhancement: content stays visible if JS fails or is blocked -->
+<script>document.documentElement.classList.add('js');</script>
+
+<style>
+  .accordion { max-width: 640px; margin: 2rem auto; font-family: system-ui, sans-serif; color: #1a1a1a; }
+  .accordion-item { border-bottom: 1px solid #767676; }  /* 4.5:1 on white (WCAG 1.4.11) */
+  .accordion-heading { margin: 0; font-size: 1rem; }      /* keep real heading semantics */
+
+  .accordion-header {
+    width: 100%; min-height: 44px; padding: .75rem 0;      /* target size (WCAG 2.5.8) */
+    display: flex; justify-content: space-between; align-items: center; gap: 1rem;
+    background: none; border: 0; color: inherit; font: inherit; font-weight: 600; text-align: left; cursor: pointer;
+  }
+  .accordion-header:focus-visible { outline: 3px solid #1d4ed8; outline-offset: 2px; } /* WCAG 2.4.7 / 2.4.13 */
+
+  /* Icon is decorative: alt text after "/" hides it from screen readers */
+  .js .accordion-header::after { content: "+" / ""; font-size: 1.25rem; transition: transform .25s; }
+  .js .is-open .accordion-header::after { transform: rotate(45deg); }
+
+  /* Without JS: all content visible. With JS: collapsed panels are removed from the
+     accessibility tree and tab order via visibility (delayed so the animation still plays). */
+  .accordion-panel { display: grid; }
+  .js .accordion-panel {
+    grid-template-rows: 0fr; visibility: hidden;
+    transition: grid-template-rows .3s ease, visibility 0s linear .3s;
+  }
+  .js .is-open .accordion-panel { grid-template-rows: 1fr; visibility: visible; transition-delay: 0s; }
+  .accordion-content { overflow: hidden; }
+  .accordion-content > :last-child { margin-bottom: 1rem; }
+  .accordion-content p { line-height: 1.6; margin-top: 0; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .js .accordion-panel, .js .accordion-header::after { transition: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="accordion" data-single="false">
+
+  <div class="accordion-item is-open">
+    <h3 class="accordion-heading">
+      <button type="button" class="accordion-header" id="acc-h1" aria-controls="acc-p1">What is this?</button>
+    </h3>
+    <div class="accordion-panel" id="acc-p1" role="region" aria-labelledby="acc-h1">
+      <div class="accordion-content"><p>An accessible accordion that follows the WAI-ARIA Authoring Practices pattern.</p></div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h3 class="accordion-heading">
+      <button type="button" class="accordion-header" id="acc-h2" aria-controls="acc-p2">Is the content indexable?</button>
+    </h3>
+    <div class="accordion-panel" id="acc-p2" role="region" aria-labelledby="acc-h2">
+      <div class="accordion-content"><p>Yes. All content is in the HTML source, so crawlers and no-JS users can read it.</p></div>
+    </div>
+  </div>
+
+  <div class="accordion-item">
+    <h3 class="accordion-heading">
+      <button type="button" class="accordion-header" id="acc-h3" aria-controls="acc-p3">Which keys are supported?</button>
+    </h3>
+    <div class="accordion-panel" id="acc-p3" role="region" aria-labelledby="acc-h3">
+      <div class="accordion-content"><p>Enter and Space toggle a panel. Arrow Up/Down, Home and End move between headers.</p></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  document.querySelectorAll('.accordion').forEach(function (acc) {
+    var single  = acc.dataset.single === 'true';
+    var headers = Array.prototype.slice.call(acc.querySelectorAll('.accordion-header'));
+
+    function set(btn, open) {
+      btn.setAttribute('aria-expanded', open);
+      btn.closest('.accordion-item').classList.toggle('is-open', open);
+    }
+
+    // Sync ARIA state with the initial markup
+    headers.forEach(function (b) { set(b, b.closest('.accordion-item').classList.contains('is-open')); });
+
+    // Native <button> already handles Enter and Space
+    acc.addEventListener('click', function (e) {
+      var btn = e.target.closest('.accordion-header');
+      if (!btn) return;
+      var open = btn.getAttribute('aria-expanded') !== 'true';
+      if (single && open) headers.forEach(function (b) { set(b, false); });
+      set(btn, open);
+    });
+
+    // Optional APG keyboard navigation between headers
+    acc.addEventListener('keydown', function (e) {
+      var i = headers.indexOf(document.activeElement);
+      if (i < 0) return;
+      var next = { ArrowDown: i + 1, ArrowUp: i - 1, Home: 0, End: headers.length - 1 }[e.key];
+      if (next === undefined) return;
+      e.preventDefault();
+      headers[(next + headers.length) % headers.length].focus();
+    });
+  });
+
+  // Deep link: /page#acc-p2 opens that panel (shareable, crawlable anchor)
+  var target = location.hash && document.getElementById(location.hash.slice(1));
+  var item = target && target.closest('.accordion-item');
+  var btn = item && item.querySelector('.accordion-header');
+  if (btn && btn.getAttribute('aria-expanded') !== 'true') btn.click();
+})();
+</script>
+
+<!-- Optional: only for genuine FAQ content. Keep text identical to the visible answers. -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is the content indexable?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. All content is in the HTML source, so crawlers and no-JS users can read it."
+      }
+    }
+  ]
+}
+</script>
+</body>
+</html>
