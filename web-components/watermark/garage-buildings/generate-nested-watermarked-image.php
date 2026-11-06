@@ -1,10 +1,24 @@
 <?php
 
-require_once 'ImageWatermarker.php';
+/**
+ * Watermark every image in ./source, including images inside nested
+ * sub-folders, and recreate the same folder structure in ./destination.
+ *
+ * After processing, the script verifies that every source image has a
+ * matching watermarked file at the same relative location in destination.
+ */
+
+require_once '../ImageWatermarker.php';
+
+$sourceDir      = __DIR__ . DIRECTORY_SEPARATOR . 'source';
+$destinationDir = __DIR__ . DIRECTORY_SEPARATOR . 'destination';
 
 $watermarker = new ImageWatermarker([
-    'source'      => __DIR__ . '/source',
-    'destination' => __DIR__ . '/destination',
+    'source'      => $sourceDir,
+    'destination' => $destinationDir,
+
+    // REQUIRED for nested folders. Default is false (top-level files only).
+    'recursive'   => true,
 
     'watermarks' => [
 
@@ -46,5 +60,3 @@ $watermarker = new ImageWatermarker([
 ]);
 
 $result = $watermarker->watermarkAll();
-
-print_r($result);

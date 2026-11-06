@@ -1,6 +1,6 @@
 <?php
 
-require_once 'ImageWatermarker.php';
+require_once '../ImageWatermarker.php';
 
 $watermarker = new ImageWatermarker([
     'source'      => __DIR__ . '/source',
